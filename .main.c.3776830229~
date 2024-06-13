@@ -1,0 +1,159 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Contact {
+  
+  char name[50];
+  char phone[20];
+  struct Contact* next;
+
+} Contact;
+
+Contact* createContact(const char* name,   const char* phone) {
+  
+  Contact* newContact = (Contact*)malloc(sizeof(Contact));
+  
+  if(newContact == NULL) {
+    
+    printf("Memory allocation failed.\n");
+    exit(1);
+  }
+
+  strcpy(newContact->name, name);
+  strcpy(newContact->phone, phone);
+  newContact->next = NULL;
+
+  return newContact;
+}
+
+void addContact(Contact** head, const char* name, const char* phone) {
+  
+  Contact* newContact = createContact(name, phone);
+  
+  if(*head == NULL){
+    
+    *head = newContact;
+  } else {
+   
+    Contact* temp = *head;
+    
+    while(temp->next != NULL) {
+      temp = temp->next;
+    }
+    temp->next = newContact;
+  }
+}
+
+Contact* searchContact(Contact* head, const char* name) {
+  
+  Contact* temp = head;
+
+  while(temp != NULL) {
+    if(strcmp(temp->name, name) == 0) {
+      return temp;
+    }
+    temp = temp->next;
+  }
+  return NULL;
+}
+
+void removeContact(Contact** head, const char* name) {
+  Contact* temp = *head;
+  Contact* prev = NULL;
+
+  if(strcmp(temp->name, name) == 0) {
+    *head = temp->next;
+    free(temp);
+    return;
+  }
+
+  while(temp != NULL && strcmp(temp->name, name) != 0) {
+    prev = temp;
+    temp = temp->next;
+  }
+  if(temp == NULL) {
+    printf("Contact not found.\n");
+    return;
+  }
+  prev->next = temp->next;
+  free(temp);
+}
+
+void editContact(Contact* head, const char* oldName, const char* newName, const char* newPhone) {
+  Contact* contact = searchContact(head, oldName);
+
+  if(contact != NULL) {
+    if(newName != NULL) {
+      strcpy(contact->name, newName);
+    }
+    if(newPhone != NULL) {
+      strcpy(contact->phone, newPhone); 
+    }
+  } else {
+    printf("Contact not found");
+  }
+}
+
+void saveContacts(Contact* head, const char* filename) {
+  FILE* file = fopen(filename, "w");
+
+  if(file == NULL) {
+    printf("Error to open file.\n");
+    return;
+  }
+  Contact *temp = head;
+
+  while(temp != NULL) {
+    fprintf(file, "%s %s\n", temp->name, temp->phone);
+    temp = temp->next;
+  }
+  fclose(file);
+}
+
+int main(void) {
+    Contact* head = NULL;
+    
+    addContact(&head, "Alice", "123-456-789");
+    addContact(&head, "Lucas", "123-456-789");
+    addContact(&head, "Bruno", "123-456-789");
+
+    Contact* foundContact = searchContact(head, "Lucas");
+
+    if(foundContact == NULL) {
+      printf("Contact not found.\n");
+    } else {
+        printf("Contact found.\n");
+        printf("Contact: Nome = %s, Telefone = %s\n", foundContact->name, foundContact->phone);
+    }
+
+    editContact(head, "Lucas", "Lucas Att", "32228140");
+
+    printf("Contact: Nome = %s, Telefone = %s\n", foundContact->name, foundContact->phone);
+
+
+    removeContact(&head, "Lucas Att");
+    printf("Contact with name 'Lucas' has been removed.\n");
+  
+    Contact* temp = head;
+  
+  
+    while(temp != NULL) {
+      printf("Contato: Nome = %s, Telefone = %s\n", temp->name, temp->phone);
+      temp = temp->next;
+    }
+
+    saveContacts(head, "contacts.txt");
+
+    temp = head;
+    while(temp != NULL) {
+      
+      Contact* next = temp->next;
+      
+      free(temp);
+      temp = next;
+    }
+    
+  
+  return 0;
+}
